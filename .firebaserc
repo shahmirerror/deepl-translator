@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "deeplgrav"
-  }
+    "default": "deepltranslator",
+    "production": "deepltranslator-b2f16"
+  },
+  "targets": {},
+  "etags": {}
 }
