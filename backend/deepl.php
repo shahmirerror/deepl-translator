@@ -1,7 +1,7 @@
 <?php
 
 //API Key
-$api_file = 'includes/settings/api_key.txt';
+$api_file = '../includes/settings/api_key.txt';
 $apifp = fopen($api_file, 'r');
 $apiKey = '';
 while (!feof($apifp)) {
@@ -9,7 +9,7 @@ while (!feof($apifp)) {
 }
 
 //Exclusions
-$exc_file = 'includes/settings/exclusions.txt';
+$exc_file = '../includes/settings/exclusions.txt';
 $excfp = fopen($exc_file, 'r');
 $exc = '';
 while (!feof($excfp)) {
@@ -33,7 +33,7 @@ function convert_content_to_properties($properties) {
 $files = $_FILES['upload_files'];
 
 if (isset($_FILES['upload_files'])) {
-  header('Location: ../translator.html?success=false&message=No file found to be translated!');   
+  header('Location: ../public/translator.html?success=false&message=No file found to be translated!');   
 }
 
 $names = $_FILES['upload_files']['name'];
@@ -46,13 +46,13 @@ $sizes = $_FILES['upload_files']['size'];
 for($i = 0; $i < count($names); $i++)
 {
     if (isset($names[$i])) {
-        $target_dir = 'includes/uploaded_files/';
+        $target_dir = '../includes/uploaded_files/';
         $target_file = $target_dir . $names[$i];
 
         $uploader = move_uploaded_file($tmp_names[$i], $target_file);
 
         if (!$uploader) {
-          header('Location: ../translator.html?success=false&message=File failed to upload ('.$names[$i].')');   
+          header('Location: ../public/translator.html?success=false&message=File failed to upload ('.$names[$i].')');   
         }
     }
 }
@@ -64,7 +64,7 @@ if($_POST['language_group'] == 'list')
 }
 elseif($_POST['language_group'] == 'all')
 {
-  $all_lang_file = 'includes/settings/languages.txt';
+  $all_lang_file = '../includes/settings/languages.txt';
   $langfp = fopen($all_lang_file, 'r');
   $langs = '';
   while (!feof($langfp)) {
@@ -74,7 +74,7 @@ elseif($_POST['language_group'] == 'all')
 }
 elseif($_POST['language_group'] == 'top')
 {
-  $top_lang_file = 'includes/settings/top_languages.txt';
+  $top_lang_file = '../includes/settings/top_languages.txt';
   $langfp = fopen($top_lang_file, 'r');
   $langs = '';
   while (!feof($langfp)) {
@@ -84,13 +84,13 @@ elseif($_POST['language_group'] == 'top')
 }
 
 if (count($_POST['languages']) == 0) {
-  header('Location: ../translator.html?success=false&message=No Language selected for translation');   
+  header('Location: ../public/translator.html?success=false&message=No Language selected for translation');   
 }
 
 foreach ($target_languages as $target_language) {
   for($i = 0; $i < count($names); $i++)
   {
-    $target_dir = 'includes/uploaded_files/';
+    $target_dir = '../includes/uploaded_files/';
     $filename = $target_dir . $names[$i];
     $boom = explode('.',$names[$i]);
 
@@ -150,7 +150,7 @@ foreach ($target_languages as $target_language) {
 
     $content = convert_content_to_properties($properties);
 
-    $filename = 'includes/translated_files/'.$boom[0].'.'.strtolower($target_language).'.md';
+    $filename = '../includes/translated_files/'.$boom[0].'.'.strtolower($target_language).'.md';
 
     $fp = fopen($filename, 'w');
     // print_r($content);
@@ -160,4 +160,4 @@ foreach ($target_languages as $target_language) {
   }
 }
 
-header('Location: ../translated-files.html?success=true&message=Files have been translated and uploaded!');
+header('Location: ../public/translated-files.html?success=true&message=Files have been translated and uploaded!');

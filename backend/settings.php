@@ -25,7 +25,7 @@ if(isset($_POST['setting']))
 
     fclose($excfp);
 
-    header('Location: ../settings.html?success=true&message=Exclusions have been updated!');
+    header('Location: ../public/settings.html?success=true&message=Exclusions have been updated!');
   }
   elseif($_POST['setting'] == 'languages')
   {
@@ -38,7 +38,7 @@ if(isset($_POST['setting']))
 
     fclose($langfp);
 
-    header('Location: ../settings.html?success=true&message=Language List has been updated!');
+    header('Location: ../public/settings.html?success=true&message=Language List has been updated!');
   }
   elseif($_POST['setting'] == 'top_languages')
   {
@@ -51,10 +51,10 @@ if(isset($_POST['setting']))
 
     fclose($toplangfp);
 
-    header('Location: ../settings.html?success=true&message=Top Languages have been updated!');
+    header('Location: ../public/settings.html?success=true&message=Top Languages have been updated!');
   }
 }
 else
 {
-  header('Location: ../settings.html');
+  header('Location: ../public/settings.html');
 }
