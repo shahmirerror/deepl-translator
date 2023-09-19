@@ -3,8 +3,8 @@
     "public": "public",
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.php"
+        "source": "/assets/**",
+        "destination": "/assets/**"
       }
     ],
     "ignore": [
