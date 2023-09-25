@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en" data-bs-theme="auto">
-    <head><script src="../assets/js/color-modes.js"></script>
+    <head><script src="assets/js/color-modes.js"></script>
 
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,7 @@
         <meta name="author"
             content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
         <meta name="generator" content="Hugo 0.115.4">
-        <title>Translator · DeepL Translator</title>
+        <title>Translated Files · DeepL Translator</title>
 
         <link rel="canonical"
             href="https://getbootstrap.com/docs/5.3/examples/dashboard/">
@@ -16,7 +16,7 @@
         <link rel="stylesheet"
             href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
 
-        <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
 
         <style>
       .bd-placeholder-img {
@@ -97,7 +97,7 @@
             href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"
             rel="stylesheet">
         <!-- Custom styles for this template -->
-        <link href="../includes/dashboard.css" rel="stylesheet">
+        <link href="includes/dashboard.css" rel="stylesheet">
     </head>
     <body>
         <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
@@ -290,7 +290,7 @@
                                 <li class="nav-item">
                                     <a
                                         class="nav-link d-flex align-items-center gap-2"
-                                        aria-current="page" href="./index.html">
+                                        aria-current="page" href="./index.php">
                                         <svg class="bi"><use
                                                 xlink:href="#house-fill" /></svg>
                                         Dashboard
@@ -298,8 +298,8 @@
                                 </li>
                                 <li class="nav-item">
                                     <a
-                                        class="nav-link d-flex align-items-center gap-2 active"
-                                        href="./translator.html">
+                                        class="nav-link d-flex align-items-center gap-2"
+                                        href="./translator.php">
                                         <svg class="bi"><use
                                                 xlink:href="#file-earmark" /></svg>
                                         Translator
@@ -308,15 +308,15 @@
                                 <li class="nav-item">
                                     <a
                                         class="nav-link d-flex align-items-center gap-2"
-                                        href="./uploaded-files.html">
+                                        href="./uploaded-files.php">
                                         <svg class="bi"><use xlink:href="#cart" /></svg>
                                         Uploaded Files
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a
-                                        class="nav-link d-flex align-items-center gap-2"
-                                        href="./translated-files.html">
+                                        class="nav-link d-flex align-items-center gap-2 active"
+                                        href="./translated-files.php">
                                         <svg class="bi"><use
                                                 xlink:href="#people" /></svg>
                                         Translated Files
@@ -325,7 +325,7 @@
                                 <li class="nav-item">
                                     <a
                                         class="nav-link d-flex align-items-center gap-2"
-                                        href="./settings.html">
+                                        href="./settings.php">
                                         <svg class="bi"><use
                                                 xlink:href="#people" /></svg>
                                         Settings
@@ -335,114 +335,76 @@
                         </div>
                     </div>
                 </div>
-
+<?php
+$dir = "./includes/translated_files";
+$files = scandir($dir);
+?>
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                     <div
                         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                        <h1 class="h2">Translator</h1>
+                        <h1 class="h2">Translated Files</h1>
                         
                     </div>
-                    <span id="status_message"></span>
-                    <form class="form-floating" action="../backend/deepl.php" method="POST" enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-sm-4">
-                            <label class="form-label">Choose File(s)</label>
-                            <input type="file" name="upload_files[]" id="upload_files" class="form-control" multiple="true">
-                        </div>
-                        <div class="col-sm-7">
-                            <div class="form-check form-check-inline">
-                                <label class="form-label">Select Languages from list</label>
-                                <input type="radio" class="form-check-input" name="language_group" value="list" checked>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <label class="form-label">Select All Languages</label>
-                                <input type="radio" class="form-check-input" name="language_group" value="all">
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <label class="form-label">Select All Top Languages</label>
-                                <input type="radio" class="form-check-input" name="language_group" value="top">
-                            </div>
-                            <br>
-                            <span id="langs_list"></span>
-                            </div>
-                        </div>
-                    <div class="row">
-                        <div class="col-sm-3">
-                          <button type="submit" class="mt-3 btn btn-md btn-success">
-                            Translate File(s)
-                        </button>
-                        </div>
+                    <?php
+                    if(isset($_GET['success'])){
+                        if($_GET['success'] == 'true'){?>
+                    <div class="alert alert-success alert-dismissible">
+                        <strong>Success!</strong> <?php if(isset($_GET['message'])){ echo $_GET['message']; } ?>
                     </div>
-                    </form>
+                    <?php
+                        }
+                        elseif($_GET['success'] == 'false')
+                        {?>
+                    <div class="alert alert-danger alert-dismissible">
+                        <strong>Error!</strong> <?php if(isset($_GET['message'])){ echo $_GET['message']; } ?>
+                    </div>
+                        <?php
+                        }
+                    }
+                    ?>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>File Name</th>
+                              <th>File Size</th>
+                              <th>Last Modified</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                            $i = 0;
+                            foreach ($files as $file) {
+                                if ($file != "." && $file != "..") {
+                                    $i++;
+                                    $size = filesize($dir . "/" . $file);
+                                    $modified = date("Y-m-d H:i:s", filemtime($dir . "/" . $file));
+                            ?>
+                            <tr>
+                              <td><?php echo $i; ?></td>
+                              <td><?php echo $file; ?></td>
+                              <td><?php echo number_format($size/1024, 2).' KB'; ?></td>
+                              <td><?php echo date('F d, Y (H:i:s A)', strtotime($modified)); ?></td>
+                              <td>
+                                <a type="button" class="btn btn-sm btn-primary text-white" download="<?php echo $file; ?>" href="<?php echo $dir.'/'.$file; ?>">Download File</a>
+                              </td>
+                            </tr>
+                            <?php
+                                }
+                            }
+                            ?>
+                          </tbody>
+                        </table>
+                    </div>
                 </main>
             </div>
         </div>
-        <script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/dist/js/bootstrap.bundle.min.js"></script>
 
         <script
             src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"
             integrity="sha384-gdQErvCNWvHQZj6XZM0dNsAoY4v+j5P1XDpNkcM3HJG1Yx04ecqIHk7+4VBOCHOG"
-            crossorigin="anonymous"></script><script src="../includes/dashboard.js"></script>
-            <script type="text/javascript">
-            window.onload = function() {
-                sendRequestToPHP();
-                getQueryParams();
-            };
-
-            function sendRequestToPHP() {
-                // Create a new XMLHttpRequest object
-                var xhr = new XMLHttpRequest();
-
-                // Configure the request
-                xhr.open("GET", "../backend/page-setup.php?page=translator", true);
-
-                // Set up a callback function to handle the response
-                xhr.onload = function () {
-                    if (xhr.status === 200) {
-                    // Request was successful, and you can handle the response here
-                        document.getElementById('langs_list').innerHTML = xhr.responseText;
-                    } else {
-                    // Request failed
-                        alert("Request failed with status:"+xhr.status);
-                    }
-                };
-
-                // Send the request
-                xhr.send();
-            }
-
-            function getQueryParams() {
-                // If no URL is provided, use the current URL
-                url = window.location.href;
-                
-                // Parse the URL to extract the query string
-                const queryString = url.split('?')[1];
-
-                // Create an object to store the query parameters
-                const queryParams = {};
-
-                if (queryString) {
-                    // Split the query string into individual key-value pairs
-                    const keyValuePairs = queryString.split('&');
-
-                    // Loop through the key-value pairs and populate the queryParams object
-                        const [key, value] = keyValuePairs[0].split('=');
-                        if(key == 'success' && value == 'true')
-                        {
-                            const [key, value] = keyValuePairs[1].split('=');
-                            document.getElementById('status_message').innerHTML = `<div class="alert alert-success alert-dismissible">
-                                                                            <strong>Success!</strong> ${value}
-                                                                        </div>`;
-                        }
-                        else
-                        {
-                            const [key, value] = keyValuePairs[1].split('=');
-                            document.getElementById('status_message').innerHTML = `<div class="alert alert-danger alert-dismissible">
-                                                                            <strong>Error!</strong> ${value}
-                                                                        </div>`;
-                        }
-                }
-            }
-        </script>
-    </body>
+            crossorigin="anonymous"></script><script src="includes/dashboard.js"></script></body>
 </html>

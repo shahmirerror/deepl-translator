@@ -32,8 +32,8 @@ function convert_content_to_properties($properties) {
 
 $files = $_FILES['upload_files'];
 
-if (isset($_FILES['upload_files'])) {
-  header('Location: ../public/translator.html?success=false&message=No file found to be translated!');   
+if (!isset($_FILES['upload_files'])) {
+    header('Location: ../translator.php?success=false&message=No file found to be translated!');   
 }
 
 $names = $_FILES['upload_files']['name'];
@@ -42,6 +42,8 @@ $types = $_FILES['upload_files']['type'];
 $tmp_names = $_FILES['upload_files']['tmp_name'];
 $errors = $_FILES['upload_files']['error'];
 $sizes = $_FILES['upload_files']['size'];
+
+$translated_files = array();
 
 for($i = 0; $i < count($names); $i++)
 {
@@ -52,7 +54,7 @@ for($i = 0; $i < count($names); $i++)
         $uploader = move_uploaded_file($tmp_names[$i], $target_file);
 
         if (!$uploader) {
-          header('Location: ../public/translator.html?success=false&message=File failed to upload ('.$names[$i].')');   
+          header('Location: ../translator.php?success=false&message=File failed to upload ('.$names[$i].')');   
         }
     }
 }
@@ -84,7 +86,7 @@ elseif($_POST['language_group'] == 'top')
 }
 
 if (count($_POST['languages']) == 0) {
-  header('Location: ../public/translator.html?success=false&message=No Language selected for translation');   
+  header('Location: ../translator.php?success=false&message=No Language selected for translation');   
 }
 
 foreach ($target_languages as $target_language) {
@@ -152,6 +154,8 @@ foreach ($target_languages as $target_language) {
 
     $filename = '../includes/translated_files/'.$boom[0].'.'.strtolower($target_language).'.md';
 
+    array_push($translated_files, $boom[0].'.'.strtolower($target_language).'.md');
+
     $fp = fopen($filename, 'w');
     // print_r($content);
     fwrite($fp, $content);
@@ -159,5 +163,65 @@ foreach ($target_languages as $target_language) {
     fclose($fp);
   }
 }
+$folderPath = '../includes/translated_files';
+$zipFilePath = 'output.zip'; // Name of the output zip file
 
-header('Location: ../public/translated-files.html?success=true&message=Files have been translated and uploaded!');
+$zip = fopen($zipFilePath, 'wb');
+
+// if ($zip) {
+//     // Create a recursive directory iterator to traverse the folder
+//     $files = new RecursiveIteratorIterator(
+//         new RecursiveDirectoryIterator($folderPath),
+//         RecursiveIteratorIterator::LEAVES_ONLY
+//     );
+
+//     foreach ($files as $file) {
+//         if (!$file->isDir() && in_array($file->getSubPathName(), $translated_files)) {
+//             // Get real path and relative path
+//             $filePath = $file->getRealPath();
+//             $relativePath = substr($filePath, strlen($folderPath) + 1);
+
+//             // Write local file header
+//             $header = "\x50\x4B\x03\x04";
+//             $header .= "\x14\x00"; // Version needed to extract (minimum)
+//             $header .= "\x00\x00"; // General purpose bit flag
+//             $header .= "\x08\x00"; // Compression method (deflate)
+//             $header .= pack('V', filemtime($filePath)); // Last modified time
+//             $header .= pack('V', crc32(file_get_contents($filePath))); // CRC32 checksum
+//             $header .= pack('V', filesize($filePath)); // Compressed size
+//             $header .= pack('V', filesize($filePath)); // Uncompressed size
+//             $header .= pack('v', strlen($relativePath)); // File name length
+//             $header .= "\x00\x00"; // Extra field length
+//             fwrite($zip, $header . $relativePath);
+
+//             // Write file content
+//             fwrite($zip, file_get_contents($filePath));
+//         }
+//     }
+
+//     // Write central directory end
+//     $cdEnd = "\x50\x4B\x05\x06\x00\x00\x00\x00";
+//     $cdEnd .= pack('v', iterator_count($files)); // Number of entries on this disk
+//     $cdEnd .= pack('v', iterator_count($files)); // Total number of entries
+//     $cdEnd .= pack('V', strlen($cdEnd)); // Size of central directory
+//     $cdEnd .= pack('V', ftell($zip)); // Offset of start of central directory
+//     $cdEnd .= "\x00\x00"; // Comment length
+//     fwrite($zip, $cdEnd);
+
+//     fclose($zip);
+
+//     // Set headers for download
+//     header('Content-Type: application/zip');
+//     header('Content-Disposition: attachment; filename="' . $zipFilePath . '"');
+//     header('Content-Length: ' . filesize($zipFilePath));
+
+//     // Output the zip file
+//     readfile($zipFilePath);
+
+//     // Optionally, delete the zip file after download
+//     unlink($zipFilePath);
+    header('Location: ../translated-files.php?success=true&message=Files have been translated and uploaded!');
+    exit;
+// } else {
+//     header('Location: ../translated-files.php?success=false&message=Files have been translated and uploaded, but there was an error making the zip file');
+// }
