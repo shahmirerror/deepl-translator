@@ -1,5 +1,11 @@
 <?php
 
+require '../vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
+
+$parser = new Parsedown();
+
 //API Key
 $api_file = '../includes/settings/api_key.txt';
 $apifp = fopen($api_file, 'r');
@@ -18,17 +24,16 @@ while (!feof($excfp)) {
 
 $exclusions = explode(',',$exc);
 
-function convert_content_to_properties($properties) {
-  $content = "---\n";
 
-  foreach ($properties as $key => $value) {
-    $content .= $key . ': ' . $value."\n";
-  }
-
-  $content .= "---";
-
-  return $content;
+//Text Exclusions
+$exc_file2 = '../includes/settings/exclusions_in_text.txt';
+$excfp2 = fopen($exc_file2, 'r');
+$exc2 = '';
+while (!feof($excfp2)) {
+  $exc2 = fgets($excfp2);
 }
+
+$exclusions2 = explode(',',$exc2);
 
 $files = $_FILES['upload_files'];
 
@@ -62,6 +67,9 @@ for($i = 0; $i < count($names); $i++)
 // Get the target languages
 if($_POST['language_group'] == 'list')
 {
+  if (!isset($_POST['languages'])) {
+    header('Location: ../translator.php?success=false&message=No Language selected for translation');   
+  }
   $target_languages = $_POST['languages'];
 }
 elseif($_POST['language_group'] == 'all')
@@ -85,143 +93,204 @@ elseif($_POST['language_group'] == 'top')
   $target_languages = explode(',',$langs);
 }
 
-if (count($_POST['languages']) == 0) {
-  header('Location: ../translator.php?success=false&message=No Language selected for translation');   
-}
-
-foreach ($target_languages as $target_language) {
+foreach ($target_languages as $target_language)
+{
   for($i = 0; $i < count($names); $i++)
   {
     $target_dir = '../includes/uploaded_files/';
     $filename = $target_dir . $names[$i];
     $boom = explode('.',$names[$i]);
 
-    $fp = fopen($filename, 'r');
+    // $fp = fopen($filename, 'r');
 
-    $properties = [];
+    $markdownContent = str_replace("---","",file_get_contents($filename));
+    
+    $properties = Yaml::parse($markdownContent);
 
-    $regex = '/^([-\w]+):\s+(.*)$/m';
-
-    while (!feof($fp)) {
-      $line = fgets($fp);
-
-      if (preg_match($regex, $line, $matches)) {
-        $properties[$matches[1]] = $matches[2];
-      }
-    }
-
-    fclose($fp);
-
-    $lines = array();
-
+    // echo '<p>';
     foreach ($properties as $key => $value) {
-      if(!in_array($key,$exclusions))
-      {
-        
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => 'https://api-free.deepl.com/v2/translate',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS =>'{
-            "text" : ["'.$value.'"],
-            "target_lang" : "'.$target_language.'"
-        }',
-          CURLOPT_HTTPHEADER => array(
-            'Authorization: DeepL-Auth-Key '.$apiKey,
-            'Content-Type: application/json'
-          ),
-        ));
-
-        $response = json_decode(curl_exec($curl));
-
-        curl_close($curl);
-        $properties[$key] = $response->translations[0]->text;
+      if (is_array($value)) {
+          // Handle child properties
+          // echo $key.':'."<br>";
+          foreach ($value as $childKey => $childValue) {
+            if(is_array($childValue))
+            {
+              // echo "----->".$childKey.':'."<br>";
+              foreach ($childValue as $gchildKey => $gchildValue) {
+                  if(is_array($childValue))
+                  {
+                      // echo "---------->".$gchildKey.':'."<br>";
+                      foreach ($gchildValue as $ggchildKey => $ggchildValue)
+                      {
+                          // echo "-------------------->".$ggchildKey.': '.$ggchildValue."<br>";
+                          // echo "-------------------->".$ggchildKey.': '.translate($ggchildKey, $ggchildValue, $exclusions, $exclusions2, $apiKey, $target_language)."<br>";
+                          $properties[$key][$childKey][$gchildKey][$ggchildKey] = translate($ggchildKey, $ggchildValue, $exclusions, $exclusions2, $apiKey, $target_language);
+                      }
+                  }
+                  else
+                  {
+                      // echo "---------->".$gchildKey.': '.$gchildValue."<br>";
+                      // echo "---------->".$gchildKey.': '.translate($gchildKey, $gchildValue, $exclusions, $exclusions2, $apiKey, $target_language)."<br>";
+                      $properties[$key][$childKey][$gchildKey] = translate($gchildKey, $gchildValue, $exclusions, $exclusions2, $apiKey, $target_language);
+                  }  
+              }
+            }
+            else
+            {
+              // echo "----->".$childKey.': '.$childValue."<br>";
+              // echo "----->".$childKey.': '.translate($childKey, $childValue, $exclusions, $exclusions2, $apiKey, $target_language)."<br>";
+              $properties[$key][$childKey] = translate($childKey, $childValue, $exclusions, $exclusions2, $apiKey, $target_language);
+            }
+          }
+      } else {
+          // Handle top-level properties
+          // echo $key.': '.$value."<br>";
+          // echo $key.': '.translate($key, $value, $exclusions, $exclusions2, $apiKey, $target_language)."<br>";
+          $properties[$key] = translate($key, $value, $exclusions, $exclusions2, $apiKey, $target_language);
       }
-      else
-      {
-        $properties[$key] = $value;
-      }
-    }
-
-    $content = convert_content_to_properties($properties);
+  }
 
     $filename = '../includes/translated_files/'.$boom[0].'.'.strtolower($target_language).'.md';
 
     array_push($translated_files, $boom[0].'.'.strtolower($target_language).'.md');
 
     $fp = fopen($filename, 'w');
-    // print_r($content);
-    fwrite($fp, $content);
+
+    $finalContent = "---\n".Yaml::dump($properties)."---";
+
+    $finalContent = str_replace("[{","\n        -\n           ", $finalContent);
+    $finalContent = str_replace("}]","", $finalContent);
+    $finalContent = str_replace("}, {","\n        -\n           ", $finalContent);
+    $finalContent = str_replace("', ","'\n            ", $finalContent);
+    $finalContent = str_replace(": ''",": null", $finalContent);
+    $finalContent = str_replace(", title: ","\n            title: ", $finalContent);
+    $finalContent = str_replace(", name: ","\n            name: ", $finalContent);
+    $finalContent = str_replace(", stars: ","\n            stars: ", $finalContent);
+    $finalContent = str_replace(", description: ","\n            description: ", $finalContent);
+    $finalContent = str_replace(", image: ","\n            image: ", $finalContent);
+    
+    fwrite($fp, $finalContent);
 
     fclose($fp);
   }
 }
-$folderPath = '../includes/translated_files';
-$zipFilePath = 'output.zip'; // Name of the output zip file
 
-$zip = fopen($zipFilePath, 'wb');
+function translate($key, $value, $exclusions, $exclusions2, $apiKey, $target_language)
+{
+  if(!in_array($key,$exclusions))
+  {
+    $back_replace_org = array();
+    $back_replace_ph = array();
 
-// if ($zip) {
-//     // Create a recursive directory iterator to traverse the folder
-//     $files = new RecursiveIteratorIterator(
-//         new RecursiveDirectoryIterator($folderPath),
-//         RecursiveIteratorIterator::LEAVES_ONLY
-//     );
+    $startend_rep_text = "|";
+    $mid_rep_text = "_";
 
-//     foreach ($files as $file) {
-//         if (!$file->isDir() && in_array($file->getSubPathName(), $translated_files)) {
-//             // Get real path and relative path
-//             $filePath = $file->getRealPath();
-//             $relativePath = substr($filePath, strlen($folderPath) + 1);
+    $rep_count = 0;
+    foreach($exclusions2 as $exc2)
+    {
+      if(strstr($value, $exc2))
+      {
+        $rep_count++;
+        $rep_text = "";
 
-//             // Write local file header
-//             $header = "\x50\x4B\x03\x04";
-//             $header .= "\x14\x00"; // Version needed to extract (minimum)
-//             $header .= "\x00\x00"; // General purpose bit flag
-//             $header .= "\x08\x00"; // Compression method (deflate)
-//             $header .= pack('V', filemtime($filePath)); // Last modified time
-//             $header .= pack('V', crc32(file_get_contents($filePath))); // CRC32 checksum
-//             $header .= pack('V', filesize($filePath)); // Compressed size
-//             $header .= pack('V', filesize($filePath)); // Uncompressed size
-//             $header .= pack('v', strlen($relativePath)); // File name length
-//             $header .= "\x00\x00"; // Extra field length
-//             fwrite($zip, $header . $relativePath);
+        if($rep_count > 1)
+        {
+          for($o = 0; $o < $rep_count; $o++)
+          {
+            $rep_text .= $startend_rep_text;
+          }
 
-//             // Write file content
-//             fwrite($zip, file_get_contents($filePath));
-//         }
-//     }
+          $rep_text .= $mid_rep_text;
 
-//     // Write central directory end
-//     $cdEnd = "\x50\x4B\x05\x06\x00\x00\x00\x00";
-//     $cdEnd .= pack('v', iterator_count($files)); // Number of entries on this disk
-//     $cdEnd .= pack('v', iterator_count($files)); // Total number of entries
-//     $cdEnd .= pack('V', strlen($cdEnd)); // Size of central directory
-//     $cdEnd .= pack('V', ftell($zip)); // Offset of start of central directory
-//     $cdEnd .= "\x00\x00"; // Comment length
-//     fwrite($zip, $cdEnd);
+          for($o = 0; $o < $rep_count; $o++)
+          {
+            $rep_text .= $startend_rep_text;
+          }
+        }
+        else
+        {
+          $rep_text = $startend_rep_text.$mid_rep_text.$startend_rep_text;
+        }
+        
+        $value = str_replace($exc2,$rep_text, $value);
 
-//     fclose($zip);
+        array_push($back_replace_org, $exc2);
+        array_push($back_replace_ph, $rep_text);
+      }
+    }
 
-//     // Set headers for download
-//     header('Content-Type: application/zip');
-//     header('Content-Disposition: attachment; filename="' . $zipFilePath . '"');
-//     header('Content-Length: ' . filesize($zipFilePath));
+    $curl = curl_init();
 
-//     // Output the zip file
-//     readfile($zipFilePath);
+    curl_setopt_array($curl, array(
+      CURLOPT_URL => 'https://api-free.deepl.com/v2/translate',
+      CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_ENCODING => '',
+      CURLOPT_MAXREDIRS => 10,
+      CURLOPT_TIMEOUT => 0,
+      CURLOPT_FOLLOWLOCATION => true,
+      CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+      CURLOPT_CUSTOMREQUEST => 'POST',
+      CURLOPT_POSTFIELDS =>'{
+        "text" : ["'.$value.'"],
+        "target_lang" : "'.$target_language.'"
+    }',
+      CURLOPT_HTTPHEADER => array(
+        'Authorization: DeepL-Auth-Key '.$apiKey,
+        'Content-Type: application/json'
+      ),
+    ));
 
-//     // Optionally, delete the zip file after download
-//     unlink($zipFilePath);
+    $response = json_decode(curl_exec($curl));
+
+    curl_close($curl);
+    $Value = $response->translations[0]->text;
+
+    for($t = 0; $t < count($back_replace_ph); $t++)
+    {
+      $Value = str_replace($back_replace_ph[$t],$back_replace_org[$t],$Value);
+    }
+
+     return $Value;
+  }
+  else
+  {
+    return $value;
+  }
+}
+
+// $folderPath = '../includes/translated_files';
+// $zip = new ZipArchive();
+// $zipFileName = 'DeepL Translated Files';
+
+
+// if ($zip->open($zipFileName, ZipArchive::CREATE) === true) {
+//     foreach($translated_files as $translated_file)
+//     {
+//       $mdfilename = '../includes/translated_files/'.$translated_file;
+
+//       if($zip->addFile($mdfilename, $translated_file))
+//       {
+//         echo $translated_file.' added in zip<br>';
+//       }
+//       else
+//       {
+//         echo $translated_file.' not added in zip<br>';
+//       }
+//     } 
+//     $zip->close();
+// }
+
+// // Send the ZIP file as a download
+// header('Content-Type: application/zip');
+// header('Content-Disposition: attachment; filename="' . $zipFileName . '"');
+// header('Content-Length: ' . filesize($zipFileName));
+
+// readfile($zipFileName);
+
+// unlink($zipFileName);
+
     header('Location: ../translated-files.php?success=true&message=Files have been translated and uploaded!');
-    exit;
+    // exit;
 // } else {
 //     header('Location: ../translated-files.php?success=false&message=Files have been translated and uploaded, but there was an error making the zip file');
 // }

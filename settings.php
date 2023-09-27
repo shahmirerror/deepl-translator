@@ -387,6 +387,12 @@
                                 while (!feof($fp)) {
                                     $line = fgets($fp);
                                 }
+                                $target_dir2 = 'includes/settings/exclusions_in_text.txt';
+                                $fp2 = fopen($target_dir2, 'r');
+                                $line2 = '';
+                                while (!feof($fp2)) {
+                                    $line2 = fgets($fp2);
+                                }
                         ?>
                     <form class="form-floating" action="./backend/settings.php" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="setting" value="exclusions" />
@@ -394,6 +400,10 @@
                             <div class="col-md-12">
                                 <label class="form-label">Enter labels you want excluded by seperating them with commas</label>
                                 <textarea name="excludes" id="excludes" class="form-control"><?php echo $line; ?></textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Enter text you want excluded from translation by seperating them with commas</label>
+                                <textarea name="excludes2" id="excludes2" class="form-control"><?php echo $line2; ?></textarea>
                             </div>
                         </div>
                         <div class="row">
@@ -420,7 +430,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-3 mt-3">
-                                <button type="submit" class="btn btn-sm btn-success">Update Exclusions List</button>
+                                <button type="submit" class="btn btn-sm btn-success">Update Languages List</button>
                             </div>
                         </div>
                     </form>

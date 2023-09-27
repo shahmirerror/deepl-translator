@@ -25,6 +25,14 @@ if(isset($_POST['setting']))
 
     fclose($excfp);
 
+    $exc_file2 = '../includes/settings/exclusions_in_text.txt';
+    $excfp2 = fopen($exc_file2, 'w');
+    $exc2 = $_POST['excludes2'];
+
+    fwrite($excfp2, $exc2);
+
+    fclose($excfp2);
+
     header('Location: ../settings.php?success=true&message=Exclusions have been updated!');
   }
   elseif($_POST['setting'] == 'languages')

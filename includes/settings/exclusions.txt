@@ -1,1 +1,1 @@
-title,image
+image,media_order,headline_bg_color,bg_color
