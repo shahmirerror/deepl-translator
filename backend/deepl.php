@@ -4,8 +4,6 @@ require '../vendor/autoload.php';
 
 use Symfony\Component\Yaml\Yaml;
 
-$parser = new Parsedown();
-
 //API Key
 $api_file = '../includes/settings/api_key.txt';
 $apifp = fopen($api_file, 'r');
