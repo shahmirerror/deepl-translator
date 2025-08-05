@@ -1,6 +1,5 @@
 # 🌐 DeepL Translator Project
 
-[![Live Site](https://img.shields.io/badge/Visit‐Demo‐Not%20Public‑grey?style=for‑the‑badge)]()
 ![HTML](https://img.shields.io/badge/Languages‑HTML%20%2B%20PHP%2CJS‑orange?style=for‑the‑badge)
 ![Status](https://img.shields.io/badge/Status‑Showcase‑blue?style=for‑the‑badge)
 ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=shahmirerror.deepl-translator&style=for-the-badge)
